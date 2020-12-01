@@ -3,8 +3,8 @@ import tkinter, winsound
 
 #import pandas as pd
 #import scipy.io as sio
-#from os.path import dirname, join as pjoin
 
+test
 path='C:/Users/ptsch/Box/AP3_Open_Access_Model/Course_Project/Model_Components'
 
 # function that prompts user to type in year for reading in emissions,
