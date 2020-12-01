@@ -4,14 +4,13 @@ import tkinter, winsound
 #import pandas as pd
 #import scipy.io as sio
 
-test
 path='C:/Users/ptsch/Box/AP3_Open_Access_Model/Course_Project/Model_Components'
 
 # function that prompts user to type in year for reading in emissions,
 # stores year as a variable for other functions 
 def emissionVitalsEntry():
     global year
-    global areaSources
+    global areaSourceEmissions
     global lowStackEmissions
     global medStackEmissions
     global tallStackEmissions
@@ -24,7 +23,7 @@ def emissionVitalsEntry():
         year = input("Enter valid NEI year (2008, 2011, 2014 or 2017)")
 
     # read in emissions
-    areaSources = np.genfromtxt(path + '/Emissions/area_sources_' + year +
+    areaSourceEmissions = np.genfromtxt(path + '/Emissions/area_sources_' + year +
     '.csv', delimiter=',')
     lowStackEmissions = np.genfromtxt(path + '/Emissions/low_' + year +
     '.csv', delimiter=',')
@@ -47,6 +46,31 @@ def emissionVitalsEntry():
 def sourceReceptorReadin():
     # read in source/receptor matrices
     ## Area
+    global areaSRNOx
+    global areaSRPMVOC
+    global areaSRSO2
+    global areaSRNH3
+
+    global lowSRNOx
+    global lowSRPMVOC
+    global lowSRSO2
+    global lowSRNH3
+    
+    global medSRNOx
+    global medSRPMVOC
+    global medSRSO2
+    global medSRNH3
+    
+    global tallSRNOx
+    global tallSRPMVOC
+    global tallSRSO2
+    global tallSRNH3
+    
+    global tall2SRNOx
+    global tall2SRPMVOC
+    global tall2SRSO2
+    global tall2SRNH3
+    
     areaSRNOx = np.genfromtxt(path + '/SR_Matrices/Area_NOx.csv', 
     delimiter=',')
     areaSRPMVOC = np.genfromtxt(path + '/SR_Matrices/Area_PM_VOC.csv', 
@@ -103,33 +127,44 @@ sourceReceptorReadin()
 # there may be options added here for different damage functions later
 
 def calibrationCoefficientReadin(year):
-    global vrmr = 9186210
-    global drAdult = 0.005826891
-    global drInfant = 0.006765865
+    global vrmr
+    global drAdult
+    global drInfant
+
+    vrmr = 9186210
+    dradult = 0.005826891
+    drInfant = 0.006765865
+
+    global nh4Cal
+    global noxCal
+    global pm25Cal
+    global so4Cal
+    global vocCal
+
     if year == 2008:
-        global nh4Cal = .3
-        global noxCal = .52
-        global pm25Cal = .58
-        global so4Cal = 1.1
-        global vocCal = .03
+        nh4Cal = .3
+        noxCal = .52
+        pm25Cal = .58
+        so4Cal = 1.1
+        vocCal = .03
     elif year == 2011:
-        global nh4Cal = .26
-        global noxCal = .54
-        global pm25Cal = .64
-        global so4Cal = 1.4
-        global vocCal = .023
+        nh4Cal = .26
+        noxCal = .54
+        pm25Cal = .64
+        so4Cal = 1.4
+        vocCal = .023
     elif year == 2014:
-        global nh4Cal = .28
-        global noxCal = .58
-        global pm25Cal = .72
-        global so4Cal = 1.52
-        global vocCal = .02
+        nh4Cal = .28
+        noxCal = .58
+        pm25Cal = .72
+        so4Cal = 1.52
+        vocCal = .02
     else: 
-        global nh4Cal = .3
-        global noxCal = .46
-        global pm25Cal = .76
-        global so4Cal = 1.54
-        global vocCal = .04        
+        nh4Cal = .3
+        noxCal = .46
+        pm25Cal = .76
+        so4Cal = 1.54
+        vocCal = .04        
 
 calibrationCoefficientReadin(year)
 
@@ -138,56 +173,52 @@ calibrationCoefficientReadin(year)
 
 #### input secondary calibration here ###
 
-deaths = population * mortality
+deaths = sum(sum(population * mortality))
 
 ### Matlab Code for what comes next
-'''
-%% Area Sources
-NH3 (:,1)   =         1.06.*(28761.72.*(Area_Source {4,1}(:,1)')*((NH4_Cal.*Area_Source {5,1})))';
-NOx (:,1) =           1.35.*(28761.72.*(Area_Source {4,1}(:,2)')*((NOx_Cal.*Area_Source {1,1})))';
-PM_25_Primary (:,1) =       (28761.72.*(Area_Source {4,1}(:,4)')*((PM25_Cal.*Area_Source {2,1})))';
-SO2 (:,1)   =         1.50.*(28761.72.*(Area_Source {4,1}(:,5)')*((SO2_Cal.*Area_Source {3,1})))';
 
-A_VOC (:,1) =               (28761.72.*(Area_Source {4,1}(:,6)')*((VOC_Cal.*Area_Source {2,1})))';
-B_VOC (:,1) =               (28761.72.*(Area_Source {4,1}(:,7)')*(B_VOC_Cal.*(Area_Source {2,1})))';
+
+NH3 = 1.06 * 28761.72 * np.dot(areaSourceEmissions[:, 1],  areaSRNH3)
+'''
+NOx (:,1) =           1.35.*(28761.72.*(Area_Source {4,1}(:,2))*((NOx_Cal.*Area_Source {1,1})))
+PM_25_Primary (:,1) =       (28761.72.*(Area_Source {4,1}(:,4))*((PM25_Cal.*Area_Source {2,1})))
+SO2 (:,1)   =         1.50.*(28761.72.*(Area_Source {4,1}(:,5))*((SO2_Cal.*Area_Source {3,1})))
+
+A_VOC (:,1) =               (28761.72.*(Area_Source {4,1}(:,6))*((VOC_Cal.*Area_Source {2,1})))
+B_VOC (:,1) =               (28761.72.*(Area_Source {4,1}(:,7))*(B_VOC_Cal.*(Area_Source {2,1})))
 
 
 %% Low Stacks
-NH3 (:,2) =           1.06.*(28761.72.*(Low_Stack {4,1}(:,1)')*((NH4_Cal.*Low_Stack {5,1})))';
-NOx (:,2) =           1.35.*(28761.72.*(Low_Stack {4,1}(:,2)')*((NOx_Cal.*Low_Stack {1,1})))';
-PM_25_Primary (:,2) =       (28761.72.*(Low_Stack {4,1}(:,4)')*((PM25_Cal.*Low_Stack {2,1})))';
-SO2 (:,2) =           1.50.*(28761.72.*(Low_Stack {4,1}(:,5)')*((SO2_Cal.*Low_Stack {3,1})))';
+NH3 (:,2) =           1.06.*(28761.72.*(Low_Stack {4,1}(:,1))*((NH4_Cal.*Low_Stack {5,1})))
+NOx (:,2) =           1.35.*(28761.72.*(Low_Stack {4,1}(:,2))*((NOx_Cal.*Low_Stack {1,1})))
+PM_25_Primary (:,2) =       (28761.72.*(Low_Stack {4,1}(:,4))*((PM25_Cal.*Low_Stack {2,1})))
+SO2 (:,2) =           1.50.*(28761.72.*(Low_Stack {4,1}(:,5))*((SO2_Cal.*Low_Stack {3,1})))
 
-A_VOC (:,2) =               (28761.72.*(Low_Stack {4,1}(:,6)')*(VOC_Cal.*Low_Stack {2,1}))';
+A_VOC (:,2) =               (28761.72.*(Low_Stack {4,1}(:,6))*(VOC_Cal.*Low_Stack {2,1}))
 
 clear CB_COI CB Visibility Data PM_Emission
 
 %% Medium Stacks
 
-NH3 (:,3) =           1.06.*(28761.72.*(Med_Stack {4,1}(:,1)')*((NH4_Cal.*Med_Stack {5,1})))';
-NOx (:,3) =           1.35.*(28761.72.*(Med_Stack {4,1}(:,2)')*((NOx_Cal.*Med_Stack {1,1})))';
-PM_25_Primary (:,3) =       (28761.72.*(Med_Stack {4,1}(:,4)')*((PM25_Cal.*Med_Stack {2,1})))';
-SO2 (:,3) =           1.50.*(28761.72.*(Med_Stack {4,1}(:,5)')*((SO2_Cal.*Med_Stack {3,1})))';
-
-A_VOC (:,3) =               (28761.72.*(Med_Stack {4,1}(:,6)')*(VOC_Cal.*Med_Stack {2,1}))';
+NH3 (:,3) =           1.06.*(28761.72.*(Med_Stack {4,1}(:,1))*((NH4_Cal.*Med_Stack {5,1})))
+NOx (:,3) =           1.35.*(28761.72.*(Med_Stack {4,1}(:,2))*((NOx_Cal.*Med_Stack {1,1})))
+PM_25_Primary (:,3) =       (28761.72.*(Med_Stack {4,1}(:,4))*((PM25_Cal.*Med_Stack {2,1})))
+SO2 (:,3) =           1.50.*(28761.72.*(Med_Stack {4,1}(:,5))*((SO2_Cal.*Med_Stack {3,1})))
+A_VOC (:,3) =               (28761.72.*(Med_Stack {4,1}(:,6))*(VOC_Cal.*Med_Stack {2,1}))
 
 %% Tall Stacks
-
-NH3 (:,4) =           1.06.*(28761.72.*(Tall_Stack {4,1}(:,1)')*((NH4_Cal_tall.*Tall_Stack {5,1})))';
-NOx (:,4) =           1.35.*(28761.72.*(Tall_Stack {4,1}(:,2)')*((NOx_Cal_tall.*Tall_Stack {1,1})))';
-PM_25_Primary (:,4) =       (28761.72.*(Tall_Stack {4,1}(:,4)')*((PM25_Cal_tall.*Tall_Stack {2,1})))';
-SO2 (:,4) =           1.50.*(28761.72.*(Tall_Stack {4,1}(:,5)')*((SO2_Cal_tall.*Tall_Stack {3,1})))';
-
-A_VOC (:,4) =               (28761.72.*(Tall_Stack {4,1}(:,6)')*(VOC_Cal_tall.*Tall_Stack {2,1}))';
+NH3 (:,4) =           1.06.*(28761.72.*(Tall_Stack {4,1}(:,1))*((NH4_Cal_tall.*Tall_Stack {5,1})))
+NOx (:,4) =           1.35.*(28761.72.*(Tall_Stack {4,1}(:,2))*((NOx_Cal_tall.*Tall_Stack {1,1})))
+PM_25_Primary (:,4) =       (28761.72.*(Tall_Stack {4,1}(:,4))*((PM25_Cal_tall.*Tall_Stack {2,1})))
+SO2 (:,4) =           1.50.*(28761.72.*(Tall_Stack {4,1}(:,5))*((SO2_Cal_tall.*Tall_Stack {3,1})))
+A_VOC (:,4) =               (28761.72.*(Tall_Stack {4,1}(:,6))*(VOC_Cal_tall.*Tall_Stack {2,1}))
 
 %% New Tall Stacks
-
-NH3 (:,5) =           1.06.*(28761.72.*(New_Tall {4,1}(:,1)')*((NH4_Cal_tall2.*New_Tall {5,1})))';
-NOx (:,5) =           1.35.*(28761.72.*(New_Tall {4,1}(:,2)')*((NOx_Cal_tall2.*New_Tall {1,1})))';
-PM_25_Primary (:,5) =       (28761.72.*(New_Tall {4,1}(:,4)')*((PM25_Cal_tall2.*New_Tall {2,1})))';
-SO2 (:,5) =           1.50.*(28761.72.*(New_Tall {4,1}(:,5)')*((SO2_Cal_tall2.*New_Tall {3,1})))';
-
-A_VOC (:,5) =               (28761.72.*(New_Tall {4,1}(:,6)')*(VOC_Cal_tall2.*New_Tall {2,1}))';
+NH3 (:,5) =           1.06.*(28761.72.*(New_Tall {4,1}(:,1))*((NH4_Cal_tall2.*New_Tall {5,1})))
+NOx (:,5) =           1.35.*(28761.72.*(New_Tall {4,1}(:,2))*((NOx_Cal_tall2.*New_Tall {1,1})))
+PM_25_Primary (:,5) =       (28761.72.*(New_Tall {4,1}(:,4))*((PM25_Cal_tall2.*New_Tall {2,1})))
+SO2 (:,5) =           1.50.*(28761.72.*(New_Tall {4,1}(:,5))*((SO2_Cal_tall2.*New_Tall {3,1})))
+A_VOC (:,5) =               (28761.72.*(New_Tall {4,1}(:,6))*(VOC_Cal_tall2.*New_Tall {2,1}))
 
     run Nitrate_Sulfate_Ammonium
     run PM_25_Base_Raw
@@ -196,4 +227,5 @@ A_VOC (:,5) =               (28761.72.*(New_Tall {4,1}(:,6)')*(VOC_Cal_tall2.*Ne
 clear CB_COI CB Visibility PM_Emission
 '''
 
+print( f'Total deaths across the United States in {year}: {deaths:.0f}')
 winsound.Beep(800, 200)
