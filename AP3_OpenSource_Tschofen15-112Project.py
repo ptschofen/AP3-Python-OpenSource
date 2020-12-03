@@ -229,8 +229,11 @@ def baselineRun():
     SO4 = 1.375 * SO2
 
     # compute baseline PM25 concentrations
+    global PM25b
     PM25b = NO3 + SO4 + VOC + PM25p + NH4
 
+baselineRun()
+print(PM25b)
 ### Matlab Code for what comes next
 
 '''
