@@ -175,55 +175,129 @@ calibrationCoefficientReadin(year)
 
 deaths = sum(sum(population * mortality))
 
+def baselineRun():
+
+    # Annual emission to ug/m^3 conversion
+    global NH3conv
+    global NOxconv
+    global SO2conv
+    global PMVOCconv
+
+    NH3conv = 1.06 * 28761.72
+    NOxconv = 1.35 * 28761.72
+    SO2conv = 1.5 * 28761.72
+    PMVOCconv = 28761.72
+
+    NH3 = NH3conv * (np.dot(areaSourceEmissions[:, 0],  areaSRNH3) + 
+                    np.dot(lowStackEmissions[:, 0],  lowSRNH3) + 
+                    np.dot(medStackEmissions[:, 0],  medSRNH3) + 
+                    np.dot(tallStackEmissions[:, 0],  tallSRNH3) + 
+                    np.dot(tall2StackEmissions[:, 0],  tall2SRNH3))
+
+    NOx = NOxconv * (np.dot(areaSourceEmissions[:, 1],  areaSRNOx) + 
+                    np.dot(lowStackEmissions[:, 1],  lowSRNOx) + 
+                    np.dot(medStackEmissions[:, 1],  medSRNOx) + 
+                    np.dot(tallStackEmissions[:, 1],  tallSRNOx) + 
+                    np.dot(tall2StackEmissions[:, 1],  tall2SRNOx))
+
+    PM25p = PMVOCconv * (np.dot(areaSourceEmissions[:, 3],  areaSRPMVOC) + 
+                        np.dot(lowStackEmissions[:, 3],  lowSRPMVOC) + 
+                        np.dot(medStackEmissions[:, 3],  medSRPMVOC) + 
+                        np.dot(tallStackEmissions[:, 3],  tallSRPMVOC) + 
+                        np.dot(tall2StackEmissions[:, 3],  tall2SRPMVOC))
+
+    SO2 = SO2conv * (np.dot(areaSourceEmissions[:, 4],  areaSRSO2) + 
+                    np.dot(lowStackEmissions[:, 4],  lowSRSO2) + 
+                    np.dot(medStackEmissions[:, 4],  medSRSO2) + 
+                    np.dot(tallStackEmissions[:, 4],  tallSRSO2) + 
+                    np.dot(tall2StackEmissions[:, 4],  tall2SRSO2))
+
+    VOC = PMVOCconv * (np.dot(areaSourceEmissions[:, 5],  areaSRPMVOC) + 
+                    np.dot(areaSourceEmissions[:, 6],  areaSRPMVOC) + 
+                    np.dot(lowStackEmissions[:, 5],  lowSRPMVOC) + 
+                    np.dot(medStackEmissions[:, 5],  medSRPMVOC) + 
+                    np.dot(tallStackEmissions[:, 5],  tallSRPMVOC) + 
+                    np.dot(tall2StackEmissions[:, 5],  tall2SRPMVOC))
+
+    NH4 = NH3
+    NH4e = (NH3 / 18 - 1.5 * SO2 / 96)
+    NH4e = NH4e.clip(10**-12)
+
+    HNO3 = NOx/62
+
+    NO3 = 0.6509*(0.33873*HNO3+0.121008*NH4e+ 3.511482*(HNO3*NH4e))*62
+    SO4 = 1.375 * SO2
+
+    # compute baseline PM25 concentrations
+    PM25b = NO3 + SO4 + VOC + PM25p + NH4
+
 ### Matlab Code for what comes next
 
-
-NH3 = 1.06 * 28761.72 * np.dot(areaSourceEmissions[:, 1],  areaSRNH3)
 '''
-NOx (:,1) =           1.35.*(28761.72.*(Area_Source {4,1}(:,2))*((NOx_Cal.*Area_Source {1,1})))
-PM_25_Primary (:,1) =       (28761.72.*(Area_Source {4,1}(:,4))*((PM25_Cal.*Area_Source {2,1})))
-SO2 (:,1)   =         1.50.*(28761.72.*(Area_Source {4,1}(:,5))*((SO2_Cal.*Area_Source {3,1})))
-
-A_VOC (:,1) =               (28761.72.*(Area_Source {4,1}(:,6))*((VOC_Cal.*Area_Source {2,1})))
-B_VOC (:,1) =               (28761.72.*(Area_Source {4,1}(:,7))*(B_VOC_Cal.*(Area_Source {2,1})))
-
-
-%% Low Stacks
-NH3 (:,2) =           1.06.*(28761.72.*(Low_Stack {4,1}(:,1))*((NH4_Cal.*Low_Stack {5,1})))
-NOx (:,2) =           1.35.*(28761.72.*(Low_Stack {4,1}(:,2))*((NOx_Cal.*Low_Stack {1,1})))
-PM_25_Primary (:,2) =       (28761.72.*(Low_Stack {4,1}(:,4))*((PM25_Cal.*Low_Stack {2,1})))
-SO2 (:,2) =           1.50.*(28761.72.*(Low_Stack {4,1}(:,5))*((SO2_Cal.*Low_Stack {3,1})))
-
-A_VOC (:,2) =               (28761.72.*(Low_Stack {4,1}(:,6))*(VOC_Cal.*Low_Stack {2,1}))
-
-clear CB_COI CB Visibility Data PM_Emission
-
-%% Medium Stacks
-
-NH3 (:,3) =           1.06.*(28761.72.*(Med_Stack {4,1}(:,1))*((NH4_Cal.*Med_Stack {5,1})))
-NOx (:,3) =           1.35.*(28761.72.*(Med_Stack {4,1}(:,2))*((NOx_Cal.*Med_Stack {1,1})))
-PM_25_Primary (:,3) =       (28761.72.*(Med_Stack {4,1}(:,4))*((PM25_Cal.*Med_Stack {2,1})))
-SO2 (:,3) =           1.50.*(28761.72.*(Med_Stack {4,1}(:,5))*((SO2_Cal.*Med_Stack {3,1})))
-A_VOC (:,3) =               (28761.72.*(Med_Stack {4,1}(:,6))*(VOC_Cal.*Med_Stack {2,1}))
-
-%% Tall Stacks
-NH3 (:,4) =           1.06.*(28761.72.*(Tall_Stack {4,1}(:,1))*((NH4_Cal_tall.*Tall_Stack {5,1})))
-NOx (:,4) =           1.35.*(28761.72.*(Tall_Stack {4,1}(:,2))*((NOx_Cal_tall.*Tall_Stack {1,1})))
-PM_25_Primary (:,4) =       (28761.72.*(Tall_Stack {4,1}(:,4))*((PM25_Cal_tall.*Tall_Stack {2,1})))
-SO2 (:,4) =           1.50.*(28761.72.*(Tall_Stack {4,1}(:,5))*((SO2_Cal_tall.*Tall_Stack {3,1})))
-A_VOC (:,4) =               (28761.72.*(Tall_Stack {4,1}(:,6))*(VOC_Cal_tall.*Tall_Stack {2,1}))
-
-%% New Tall Stacks
-NH3 (:,5) =           1.06.*(28761.72.*(New_Tall {4,1}(:,1))*((NH4_Cal_tall2.*New_Tall {5,1})))
-NOx (:,5) =           1.35.*(28761.72.*(New_Tall {4,1}(:,2))*((NOx_Cal_tall2.*New_Tall {1,1})))
-PM_25_Primary (:,5) =       (28761.72.*(New_Tall {4,1}(:,4))*((PM25_Cal_tall2.*New_Tall {2,1})))
-SO2 (:,5) =           1.50.*(28761.72.*(New_Tall {4,1}(:,5))*((SO2_Cal_tall2.*New_Tall {3,1})))
-A_VOC (:,5) =               (28761.72.*(New_Tall {4,1}(:,6))*(VOC_Cal_tall2.*New_Tall {2,1}))
 
     run Nitrate_Sulfate_Ammonium
+
+%% Compute concentrations of particulate nitrate, ammonium, and sulfate.
+% 18 = MW particulate NH4
+% 96 = MW particulate Sulfate
+% 0.12028 = (1/8.314)PPM to Mole
+% 339.9329 = (101300/298) PPM to Mole
+% 0.01595 = 1/MW PNO3 = 62
+% 0.00039 = (273K+10C)*(Gaseous Nitric Acid in ug/m^3)/(1,000*(12.187*62))
+%   This yields gaseous nitric acid in ppm then coverted to moles as above.
+
+%% Predictions from AP3
+
+NH4(:,1) = (NH3(:,1) + NH3(:,2) + NH3(:,3) + NH3(:,4) + NH3(:,5));
+SO4(:,1) = (SO2(:,1) + SO2(:,2) + SO2(:,3) + SO2(:,4) + SO2(:,5));
+NH4e(:,1) = (NH4(:,1)./18 - 1.5.*SO4(:,1)./96);
+HNO3(:,1) = (NOx(:,1) + NOx(:,2) + NOx(:,3) + NOx(:,4) + NOx(:,5))./62;
+
+HNO3_Base = HNO3;
+
+% Specifications from Charles: Fit 1
+NO3(:,1) = 0.6509.*(0.33873.*HNO3+0.121008.*NH4e+ 3.511482.*(HNO3.*NH4e)).*62;
+
+% NO3(:,1) = 0.385.*(exp(0.008267.*LN_HNO3(:,1)) +  (0.178005.*NH4e(:,1))./0.01595);
+SO4(:,1) = (1.375.*(SO2(:,1) + SO2(:,2)+ SO2(:,3)+ SO2(:,4) + SO2(:,5)));
+
+% Assemble species into total PM_25
+PM_25(:,1) = (NO3(:,1)+SO4(:,1)+A_VOC(:,1)+A_VOC(:,2)+A_VOC(:,3)+A_VOC(:,4) + 
+A_VOC(:,5) + B_VOC(:,1)+PM_25_Primary(:,1) +  PM_25_Primary(:,2) + PM_25_Primary(:,3) + 
+PM_25_Primary(:,4)+ PM_25_Primary(:,5) + NH4);
+
     run PM_25_Base_Raw
+PM_25_B(:,1) = (NO3(:,1)+SO4(:,1)+A_VOC(:,1)+A_VOC(:,2)+A_VOC(:,3)+A_VOC(:,4) + 
+A_VOC(:,5) +B_VOC(:, 1) + PM_25_Primary(:,1) +  PM_25_Primary(:,2) + PM_25_Primary(:,3) + 
+PM_25_Primary(:,4)+ PM_25_Primary(:,5)+NH4);
+
     run PM_25_Health_Base
-    
+
+% Pope, 2002 = 0.005826891 (BENMAP)
+% Lepeule, 2012 = 0.01310283
+
+% Mrozek, Taylor: $1,963,840 (2000)
+% EPA: $ 7,400,000 (2006)
+
+Cause = 1;
+
+%% BenMAP Form
+Deaths = (Mortality{3,1}.*(One'*(1-(1./(exp(DoseResponseAdult.*PM_25_B')))))').*Pop_over_30;
+
+DB = sum(sum(Deaths));
+   
+Mort = sum(sum(Deaths.*WTP_Mort));
+
+%% BenMAP Form
+Infant = (Mortality{3,1}.*(One'*(1-(1./(exp(DoseResponseInfant.*PM_25_B')))))').*Pop_Infant;
+
+Deaths_all=sum(sum(Deaths))+sum(sum(Infant));
+Mort_Infant = sum(sum(Infant.*WTP_Mort));
+
+All_Mort{1,1} = (Mort+Mort_Infant);
+Damages = [All_Mort{Cause,1}];
+B_25_Primary_MD = (sum(sum(Damages)));
+
 clear CB_COI CB Visibility PM_Emission
 '''
 
