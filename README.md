@@ -1,5 +1,8 @@
 # AP3-Python-OpenSource
 
+~~ model still under development ~~
+
+
 ## Model Overview
 The AP3 model is a model that estimates marginal damages from pollutant emissions that contribute to the formation of fine particulate matter in the contiguous United States. This type of model is called “integrated assessment model” because it combines several steps that are required to derive monetary damages for location-specific pollutant emissions:
 1. Emissions need to be fed into the model based on their location and type of emission (ground level such as transit is dealt with differently than emissions through smokestacks of power plants) and sorted by pollutant (we deal with five major precursors to particulate matter)
