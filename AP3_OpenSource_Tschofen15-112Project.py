@@ -132,7 +132,7 @@ def calibrationCoefficientReadin(year):
     global drInfant
 
     vrmr = 9186210
-    dradult = 0.005826891
+    drAdult = 0.005826891
     drInfant = 0.006765865
 
     global nh4Cal
@@ -242,43 +242,51 @@ def baselineRun():
     # compute baseline PM25 concentrations
     global PM25b
     PM25b = NO3 + SO4 + VOC + PM25p + NH4
+
+    adultMort = mortality[:, 7:18]
+    adultImpact = 1-(1/(np.exp(drAdult*PM25b)))
+    adultExposure = population[:, 7:18]
+    
+    infantMort = mortality[:, 1]
+    infantImpact = 1-(1/(np.exp(drInfant*PM25b)))
+    infantExposure = population[:, 1]
+
+    adultDeaths = (adultMort * 
+                   np.repeat(adultImpact, 11).reshape(3109, 11) * 
+                   adultExposure)
+    infantDeaths = (infantMort * 
+                   infantImpact * 
+                   infantExposure)
+    
+    global totalDeaths
+    totalDeaths = sum(sum(adultDeaths)) + sum(infantDeaths)
+
+    #print(f'Deaths for age groups in 5-year intervals: {sum(adultDeaths)}')
+
+    damageInfants = sum(infantDeaths) * vrmr
+    damageAdults =  sum(sum(adultDeaths)) * vrmr
+    
+    global damageTotal
+    damageTotal = damageInfants + damageAdults
+
+    infDmgReport = damageInfants/10**9
+    aduDmgReport = damageAdults/10**9
+    
+    global totDmgReport
+    totDmgReport = infDmgReport + aduDmgReport
+
+    print(f'Damages --- Infants: {infDmgReport:.0f} $billion, ' +
+    f'Adults: {aduDmgReport:.0f} $billion, ' +
+    f'Total: {totDmgReport} $billion (2018 prices)')
+
     toc = time.perf_counter()
     print(f"Performed baseline run in {toc - tic:0.4f} seconds")
 
 baselineRun()
-print(PM25b)
-### Matlab Code for what comes next
-
-'''
-    run PM_25_Health_Base
-
-% Pope, 2002 = 0.005826891 (BENMAP)
-% Lepeule, 2012 = 0.01310283
-
-% Mrozek, Taylor: $1,963,840 (2000)
-% EPA: $ 7,400,000 (2006)
-
-Cause = 1;
-
-%% BenMAP Form
-Deaths = (Mortality{3,1}.*(One'*(1-(1./(exp(DoseResponseAdult.*PM_25_B')))))').*Pop_over_30;
-
-DB = sum(sum(Deaths));
-   
-Mort = sum(sum(Deaths.*WTP_Mort));
-
-%% BenMAP Form
-Infant = (Mortality{3,1}.*(One'*(1-(1./(exp(DoseResponseInfant.*PM_25_B')))))').*Pop_Infant;
-
-Deaths_all=sum(sum(Deaths))+sum(sum(Infant));
-Mort_Infant = sum(sum(Infant.*WTP_Mort));
-
-All_Mort{1,1} = (Mort+Mort_Infant);
-Damages = [All_Mort{Cause,1}];
-B_25_Primary_MD = (sum(sum(Damages)));
-
-clear CB_COI CB Visibility PM_Emission
-'''
+# print(PM25b)
 
 print( f'Total deaths across the United States in {year}: {deaths:.0f}')
+print( f'Total deaths attributable to air pollution: {totalDeaths:.0f}')
+print(f'Total monetary damages from air pollution: {totDmgReport:.0f} $billion')
+#print( f'Among those: Infants: {infantDeaths}; Adults: {adultDeaths}')
 winsound.Beep(800, 200)
