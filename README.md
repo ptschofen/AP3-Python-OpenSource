@@ -23,7 +23,7 @@ Population files are also preprocessed elsewhere and the data stems from post-ce
 * Population: 3,109 counties x 19 age groups
 * Baseline Mortality: 3,109 counties x 19 age groups
 
-### Source/Receptor Matrices:
+### Source/Receptor Matrices
 These matrices are the core of the model as they describe the transport of pollutant mass from source counties to receptor counties.
 * Area: 3,109 counties x 3,109 counties (4 different matrices)
 * Low 3,109 counties x 3,109 counties (4 different matrices)
@@ -32,11 +32,11 @@ These matrices are the core of the model as they describe the transport of pollu
 * More Tall Stacks: 91 facilities x 3,109 counties (4 different matrices)
 S/R matrices undergo a change depending on the year in a secondary calibration step.
 
-## Parameters to change:
+## Parameters to change
 Emissions, Population and Mortality depending on year (2008, 2011, 2014 and 2017 so far)
 A number of other parameters are required for the model to run: a dose-response function (or damage function) describes the relationship between exposure to particulate matter and increase in mortality risk — we have two of them: one for infants and one for people aged 30+; age groups 2-29 are assumed to be impervious to adverse health effects from PM exposure. Further, a value of reduced mortality risk (VRMR) monetizes the increased mortality risk.
 
-## Outputs:
+## Outputs
 Potential intermediate results: 
 estimated air pollution deaths by the model in baseline configuration
 Average estimated concentration 
