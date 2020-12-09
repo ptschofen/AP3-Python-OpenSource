@@ -275,14 +275,17 @@ def baselineRun():
     global totDmgReport
     totDmgReport = infDmgReport + aduDmgReport
 
-    print(f'Damages --- Infants: {infDmgReport:.0f} $billion, ' +
+    print(f'\n Damages --- Infants: {infDmgReport:.0f} $billion, ' +
     f'Adults: {aduDmgReport:.0f} $billion, ' +
-    f'Total: {totDmgReport} $billion (2018 prices)')
+    f'\n ----- > Total: {totDmgReport:.0f} $billion (2018 prices)')
 
     toc = time.perf_counter()
     print(f"Performed baseline run in {toc - tic:0.4f} seconds")
 
 baselineRun()
+
+def mdLoops():
+    return 42
 # print(PM25b)
 
 print( f'Total deaths across the United States in {year}: {deaths:.0f}')
